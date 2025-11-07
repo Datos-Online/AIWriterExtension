@@ -1,4 +1,4 @@
-[Read this in English](./README.en.md)
+[Read this in English](./docs/README.en.md)
 
 ## Extensión IA para LibreOffice Writer
 
@@ -12,6 +12,8 @@ Esta extensión para LibreOffice Writer integra capacidades de inteligencia arti
 *   **Resumir texto:** Crea resúmenes concisos de pasajes largos.
 *   **Traducir texto:** Traduce el texto seleccionado a diferentes idiomas.
 *   **Configuración personalizable:** Permite configurar la clave API de OpenAI, el modelo de IA, la temperatura y el número máximo de tokens.
+
+![Demostración de AI Writer Extension](./docs/media/ui-example.gif)
 
 ## Instalación
 
