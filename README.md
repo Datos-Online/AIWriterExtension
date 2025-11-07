@@ -43,6 +43,11 @@ Antes de usar la extensión, es necesario configurar tu clave API de OpenAI y ot
 2.  **Introduce tu clave API:** En el cuadro de diálogo de configuración, introduce tu clave API de OpenAI.
 3.  **Ajusta los parámetros:** Puedes modificar el modelo de IA (por defecto `gpt-4o-mini`), la temperatura (que controla la creatividad de la respuesta) y el número máximo de tokens (longitud máxima de la respuesta).
 
+## Problemas Conocidos
+
+1.  La interfaz de usuario puede dejar de responder temporalmente mientras se espera la respuesta de la API.
+2.  El formato del texto original (como negrita, cursiva o colores) no se conserva en la respuesta generada, que se inserta como texto plano.
+
 ## Licencia
 
 Este proyecto está bajo la licencia Apache 2.0.

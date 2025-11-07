@@ -41,6 +41,11 @@ Before using the extension, you need to configure your OpenAI API key and other 
 2.  **Enter your API key:** In the settings dialog, enter your OpenAI API key.
 3.  **Adjust the parameters:** You can modify the AI model (default is `gpt-4o-mini`), the temperature (which controls the creativity of the response), and the maximum number of tokens (maximum length of the response).
 
+## Known Issues
+
+1.  The user interface may become temporarily unresponsive while waiting for the API response.
+2.  The original text formatting (such as bold, italics, or colors) is not preserved in the generated response, which is inserted as plain text.
+
 ## License
 
 This project is licensed under the Apache 2.0 License.
