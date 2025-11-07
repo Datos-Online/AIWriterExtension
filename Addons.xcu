@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oor:component-data xmlns:oor="http://openoffice.org/2001/registry" oor:name="Addons" oor:package="org.openoffice.Office">
+    <node oor:name="AddonUI">
+        <node oor:name="OfficeMenuBarMerging">
+            <node oor:name="org.openoffice.Office.UI.OpenAI" oor:op="replace">
+                <node oor:name="S1" oor:op="replace">
+                    <prop oor:name="MergePoint">
+                        <value>.uno:ToolsMenu</value>
+                    </prop>
+                    <prop oor:name="MergeCommand">
+                        <value>AddAfter</value>
+                    </prop>
+                    <prop oor:name="MergeFallback">
+                        <value>AddPath</value>
+                    </prop>
+                    <prop oor:name="MergeContext">
+                        <value>com.sun.star.text.TextDocument</value>
+                    </prop>
+                    <node oor:name="MenuItems">
+                        <node oor:name="M1" oor:op="replace">
+                            <prop oor:name="Title">
+                                <value xml:lang="es">AI Writer</value>
+                                <value xml:lang="en">AI Writer</value>
+                            </prop>
+                            <node oor:name="Submenu">
+                                <node oor:name="M1" oor:op="replace">
+                                    <prop oor:name="Title">
+                                        <value xml:lang="es">~Ampliar</value>
+                                        <value xml:lang="en">~Expand</value>
+                                    </prop>
+                                    <prop oor:name="URL">
+                                        <value>service:com.datosonline.AIWriterExtension.do?expand</value>
+                                    </prop>
+                                </node>
+                                <node oor:name="M2" oor:op="replace">
+                                    <prop oor:name="Title">
+                                        <value xml:lang="es">~Completar</value>
+                                        <value xml:lang="en">~Complete</value>
+                                    </prop>
+                                    <prop oor:name="URL">
+                                        <value>service:com.datosonline.AIWriterExtension.do?complete</value>
+                                    </prop>
+                                </node>
+                                <node oor:name="M3" oor:op="replace">
+                                    <prop oor:name="Title">
+                                        <value xml:lang="es">~Mejorar redacción</value>
+                                        <value xml:lang="en">~Improve wording</value>
+                                    </prop>
+                                    <prop oor:name="URL">
+                                        <value>service:com.datosonline.AIWriterExtension.do?improve</value>
+                                    </prop>
+                                </node>
+                                <node oor:name="M4" oor:op="replace">
+                                    <prop oor:name="Title">
+                                        <value xml:lang="es">~Resumir</value>
+                                        <value xml:lang="en">~Summarize</value>
+                                    </prop>
+                                    <prop oor:name="URL">
+                                        <value>service:com.datosonline.AIWriterExtension.do?summarize</value>
+                                    </prop>
+                                </node>
+                                <node oor:name="M5" oor:op="replace">
+                                    <prop oor:name="Title">
+                                        <value xml:lang="es">~Traducir</value>
+                                        <value xml:lang="en">~Translate</value>
+                                    </prop>
+                                    <prop oor:name="URL">
+                                        <value>service:com.datosonline.AIWriterExtension.do?translate</value>
+                                    </prop>
+                                </node>
+                                <node oor:name="M6" oor:op="replace">
+                                    <prop oor:name="Title">
+                                        <value xml:lang="es">~Ajustes</value>
+                                        <value xml:lang="en">Settin~gs</value>
+                                    </prop>
+                                    <prop oor:name="URL">
+                                        <value>service:com.datosonline.AIWriterExtension.do?settings</value>
+                                    </prop>
+                                </node>
+
+                            </node>
+                        </node>
+                    </node>
+                </node>
+            </node>
+        </node>
+    </node>
+</oor:component-data>
