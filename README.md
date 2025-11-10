@@ -4,6 +4,14 @@
 
 Esta extensión para LibreOffice Writer integra capacidades de inteligencia artificial directamente en el editor de texto, permitiéndo mejorar, resumir, ampliar, completar y traducir textos de manera eficiente utilizando la API de OpenAI. 
 
+### Compatibilidad
+
+La extensión ha sido probada y es compatible con los siguientes entornos:
+*   **Sistemas Operativos:** Ubuntu 22.04 (y distribuciones derivadas), Windows 10 y 11.
+*   **LibreOffice:** Versión 24.2 o superior.
+
+**Nota sobre macOS:** Actualmente, la extensión no es compatible con macOS. La principal dificultad reside en la detección automática de la ruta de instalación en este sistema operativo, un paso necesario para cargar los archivos de idioma de la interfaz.
+
 ## Características
 
 *   **Ampliar texto:** Añade más detalles y contenido al texto existente.
