@@ -7,7 +7,7 @@ Esta extensión para LibreOffice Writer integra capacidades de inteligencia arti
 ### Compatibilidad
 
 La extensión ha sido probada y es compatible con los siguientes entornos:
-*   **Sistemas Operativos:** Ubuntu 22.04 (y distribuciones derivadas), Windows 10 y 11.
+*   **Sistemas Operativos:** Ubuntu 20.04 (y distribuciones derivadas), Windows 10 y 11.
 *   **LibreOffice:** Versión 24.2 o superior.
 
 **Nota sobre macOS:** Actualmente, la extensión no es compatible con macOS. La principal dificultad reside en la detección automática de la ruta de instalación en este sistema operativo, un paso necesario para cargar los archivos de idioma de la interfaz.
@@ -61,3 +61,9 @@ Antes de usar la extensión, es necesario configurar tu clave API de OpenAI y ot
 ## Licencia
 
 Este proyecto está bajo la licencia Apache 2.0.
+
+## Enlaces de interés
+The Document Foundation
+-  [Input/Output to Screen with Python](https://wiki.documentfoundation.org/Macros/General/IO_to_Screen)
+-  [LibreOffice Developer's Guide: Chapter 19 - Graphical User Interfaces](https://wiki.documentfoundation.org/Documentation/DevGuide/Graphical_User_Interfaces)
+-  [New feature for Add-ons to merge into LibreOffice menu bar and toolbars](https://wiki.documentfoundation.org/Framework/Article/Addon_Menu_Toolbar_Merging)
