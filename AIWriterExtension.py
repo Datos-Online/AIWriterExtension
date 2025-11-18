@@ -266,8 +266,10 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
             "Content-Type": "application/json"
         }
         
+        model_name = self.get_config("model", "gpt-4o-mini")
+        
         payload = {
-            "model": self.get_config("model", "gpt-4o-mini"),
+            "model": model_name,
             "messages": [
                 {
                     "role":"assistant", 
@@ -290,6 +292,10 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
             "max_completion_tokens": int(self.get_config("max_tokens", "1000")),
             "temperature": float(self.get_config("temperature", "0.5"))
         }
+
+        if model_name.lower().startswith("gpt-5"):
+            del payload["temperature"]
+        
         try:
             data = json.dumps(payload).encode("utf-8")  # Convertir payload a JSON y codificarlo
             req = urllib.request.Request(API_URL, data=data, headers=headers, method="POST")
