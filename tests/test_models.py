@@ -10,6 +10,11 @@ class TestModelCapabilities(unittest.TestCase):
             with self.subTest(model=model):
                 self.assertFalse(models.supports(model, "temperature"))
 
+    def test_gpt6_no_admite_temperatura(self):
+        for model in ("gpt-6-astra", "gpt-6-sol", "gpt-6.1-sol", "gpt-6-luna"):
+            with self.subTest(model=model):
+                self.assertFalse(models.supports(model, "temperature"))
+
     def test_no_distingue_mayusculas_ni_espacios(self):
         self.assertFalse(models.supports("GPT-5-Mini", "temperature"))
         self.assertFalse(models.supports("  gpt-5  ", "temperature"))

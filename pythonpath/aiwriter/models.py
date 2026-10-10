@@ -15,6 +15,10 @@ DEFAULT_CAPABILITIES = {
 # específicos deben ir antes que los más generales.
 MODEL_CAPABILITIES = [
     ("gpt-5", {"temperature": False}),
+    # GPT-6 (gpt-6-astra, gpt-6-sol, gpt-6.1-sol, gpt-6-luna): según la guía de
+    # OpenAI, temperature solo se admite con reasoning_effort "none", y la
+    # extensión no lo envía, así que se omite siempre.
+    ("gpt-6", {"temperature": False}),
 ]
 
 
