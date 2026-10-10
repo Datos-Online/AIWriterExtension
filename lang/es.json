@@ -31,5 +31,8 @@
     "error_empty_response": "La API de OpenAI devolvió una respuesta vacía. No se ha modificado el documento.",
     "error_token_limit": "La respuesta está vacía porque se alcanzó el límite de tokens. Aumenta \"Máx. tokens\" en Ajustes e inténtalo de nuevo.",
     "cancel": "Cancelar",
-    "no_language": "Indica el idioma al que quieres traducir el texto"
+    "no_language": "Indica el idioma al que quieres traducir el texto",
+    "invalid_model": "Indica el nombre del modelo",
+    "invalid_max_tokens": "Máx. tokens debe ser un número entero mayor que 0",
+    "invalid_temperature": "La temperatura debe ser un número entre 0 y 2"
 }

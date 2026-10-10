@@ -89,18 +89,20 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
         
         elif command == "settings":
             try:
-                result = self.settings_box(self.lang['settings'])
-                if not result:
-                    return
-                else:
-                    openai_api_key = result['openai_api_key']
-                    self.set_config("openai_api_key", openai_api_key)
-                    openai_model = result["model"]
-                    self.set_config("model", openai_model)
-                    max_tokens = result["max_tokens"]
-                    self.set_config("max_tokens", max_tokens)
-                    temperature = result["temperature"]
-                    self.set_config("temperature", temperature)
+                values = None
+                while True:
+                    values = self.settings_box(self.lang['settings'], values=values)
+                    if not values:
+                        # Cancelar no modifica la configuración guardada
+                        return
+                    settings, error = self.validate_settings(values)
+                    if not error:
+                        break
+                    # Se vuelve a abrir el diálogo con lo escrito para poder corregirlo
+                    self.show_dialog(self.lang["error"], error)
+
+                for key, value in settings.items():
+                    self.set_config(key, value)
                 return
             except Exception as e:
                 self.show_dialog(self.lang["error"], f"{self.lang['error_message']}: {e}")
@@ -426,7 +428,47 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
             print("El usuario hizo clic en OK")
         """
 
-    def settings_box(self,title="", x=None, y=None):
+    def validate_settings(self, values):
+        """
+        Valida y convierte los valores introducidos en el diálogo de configuración.
+
+        :param values: Diccionario con los textos de los campos del diálogo.
+        :return: Una tupla (ajustes, error). Si todo es válido, ajustes contiene los
+                 valores convertidos y error es None; si no, ajustes es None y error
+                 es el mensaje a mostrar.
+        """
+        openai_api_key = values["openai_api_key"].strip()
+        if not openai_api_key:
+            return None, self.lang["no_api_key"]
+
+        model = values["model"].strip()
+        if not model:
+            return None, self.lang["invalid_model"]
+
+        try:
+            max_tokens = int(values["max_tokens"].strip())
+        except ValueError:
+            max_tokens = 0
+        if max_tokens <= 0:
+            return None, self.lang["invalid_max_tokens"]
+
+        try:
+            # Se acepta la coma como separador decimal
+            temperature = float(values["temperature"].strip().replace(",", "."))
+        except ValueError:
+            temperature = None
+        # La comparación también descarta nan e inf
+        if temperature is None or not 0 <= temperature <= 2:
+            return None, self.lang["invalid_temperature"]
+
+        return {
+            "openai_api_key": openai_api_key,
+            "model": model,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+        }, None
+
+    def settings_box(self,title="", x=None, y=None, values=None):
         """
         Crea y muestra el cuadro de diálogo de configuración.
 
@@ -436,8 +478,16 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
         :param title: El título para el cuadro de diálogo.
         :param x: Coordenada X opcional para la posición del diálogo.
         :param y: Coordenada Y opcional para la posición del diálogo.
-        :return: Un diccionario con los valores de configuración guardados.
+        :param values: Textos iniciales de los campos; si es None se usa la configuración guardada.
+        :return: Un diccionario con el texto de cada campo (sin validar), o None si se cancela.
         """
+        if values is None:
+            values = {
+                "openai_api_key": str(self.get_config("openai_api_key", "")),
+                "model": str(self.get_config("model", "gpt-4o-mini")),
+                "max_tokens": str(self.get_config("max_tokens", "1000")),
+                "temperature": str(self.get_config("temperature", "0.5")),
+            }
         WIDTH = 600
         HORI_MARGIN = VERT_MARGIN = 8
         BUTTON_WIDTH = 100
@@ -468,18 +518,19 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
         label_width = 120
         control_width = 450
         add("label_openai_api_key", "FixedText", HORI_MARGIN, VERT_MARGIN+4, label_width, LABEL_HEIGHT, {"Label": f"{self.lang['openai_api_key']}:", "NoLabel": True})
-        add("edit_openai_api_key", "Edit", HORI_MARGIN + label_width, VERT_MARGIN, control_width, EDIT_HEIGHT, {"Text": str(self.get_config("openai_api_key","")), "MultiLine":False})
+        add("edit_openai_api_key", "Edit", HORI_MARGIN + label_width, VERT_MARGIN, control_width, EDIT_HEIGHT, {"Text": values["openai_api_key"], "MultiLine":False})
         
         add("label_model", "FixedText", HORI_MARGIN, 62, label_width, LABEL_HEIGHT, {"Label": f"{self.lang['openai_model']}:", "NoLabel": True})
-        add("edit_model", "Edit", HORI_MARGIN + label_width, 58, control_width, EDIT_HEIGHT, {"Text": str(self.get_config("model","gpt-4o-mini"))})
+        add("edit_model", "Edit", HORI_MARGIN + label_width, 58, control_width, EDIT_HEIGHT, {"Text": values["model"]})
         
         add("label_max_tokens", "FixedText", HORI_MARGIN, 112, label_width, LABEL_HEIGHT, {"Label": f"{self.lang['max_tokens']}:", "NoLabel": True})
-        add("edit_max_tokens", "Edit", HORI_MARGIN + label_width, 108, control_width, EDIT_HEIGHT, {"Text": str(self.get_config("max_tokens","1000"))})
+        add("edit_max_tokens", "Edit", HORI_MARGIN + label_width, 108, control_width, EDIT_HEIGHT, {"Text": values["max_tokens"]})
 
         add("label_temperature", "FixedText", HORI_MARGIN, 162, label_width, LABEL_HEIGHT, {"Label": f"{self.lang['temperature']}:", "NoLabel": True})
-        add("edit_temperature", "Edit", HORI_MARGIN+ label_width, 158, control_width, EDIT_HEIGHT, {"Text": str(self.get_config("temperature","0.5"))})
+        add("edit_temperature", "Edit", HORI_MARGIN+ label_width, 158, control_width, EDIT_HEIGHT, {"Text": values["temperature"]})
 
         add("btn_ok", "Button", WIDTH - 120, HEIGHT - 50, BUTTON_WIDTH, BUTTON_HEIGHT, {"PushButtonType": OK, "DefaultButton": True})
+        add("btn_cancel", "Button", WIDTH - 230, HEIGHT - 50, BUTTON_WIDTH, BUTTON_HEIGHT, {"PushButtonType": CANCEL, "Label": self.lang["cancel"]})
 
         frame = create("com.sun.star.frame.Desktop").getCurrentFrame()
         window = frame.getContainerWindow() if frame else None
@@ -494,35 +545,30 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
         dialog.setPosSize(_x, _y, 0, 0, POS)
         
         edit_openai_api_key = dialog.getControl("edit_openai_api_key")
-        edit_openai_api_key.setSelection(uno.createUnoStruct("com.sun.star.awt.Selection", 0, len(str(self.get_config("openai_api_key","")))))
+        edit_openai_api_key.setSelection(uno.createUnoStruct("com.sun.star.awt.Selection", 0, len(values["openai_api_key"])))
         
         edit_model = dialog.getControl("edit_model")
-        edit_model.setSelection(uno.createUnoStruct("com.sun.star.awt.Selection", 0, len(str(self.get_config("model","gpt-4o-mini")))))
+        edit_model.setSelection(uno.createUnoStruct("com.sun.star.awt.Selection", 0, len(values["model"])))
 
         edit_max_tokens = dialog.getControl("edit_max_tokens")
-        edit_max_tokens.setSelection(uno.createUnoStruct("com.sun.star.awt.Selection", 0, len(str(self.get_config("max_tokens","1000")))))
+        edit_max_tokens.setSelection(uno.createUnoStruct("com.sun.star.awt.Selection", 0, len(values["max_tokens"])))
 
         edit_temperature = dialog.getControl("edit_temperature")
-        edit_temperature.setSelection(uno.createUnoStruct("com.sun.star.awt.Selection", 0, len(str(self.get_config("temperature","0.5")))))
+        edit_temperature.setSelection(uno.createUnoStruct("com.sun.star.awt.Selection", 0, len(values["temperature"])))
         
         btn_ok = dialog.getControl("btn_ok")
         btn_ok.setFocus()
 
         if dialog.execute():
             result = {
-                "openai_api_key":edit_openai_api_key.getModel().Text,
+                "openai_api_key": edit_openai_api_key.getModel().Text,
                 "model": edit_model.getModel().Text,
-                "temperature": float(edit_temperature.getModel().Text)
+                "max_tokens": edit_max_tokens.getModel().Text,
+                "temperature": edit_temperature.getModel().Text
             }
-            if edit_max_tokens.getModel().Text.isdigit():
-                result["max_tokens"] = int(edit_max_tokens.getModel().Text)
         else:
-            result = {
-                "openai_api_key": str(self.get_config("openai_api_key","")),
-                "model": str(self.get_config("model","gpt-4o-mini")),
-                "max_tokens": str(self.get_config("max_tokens","1000")),
-                "temperature": float(self.get_config("temperature", "0.5"))
-            }
+            # Cancelar o cerrar el diálogo no debe reescribir la configuración
+            result = None
 
         dialog.dispose()
         return result

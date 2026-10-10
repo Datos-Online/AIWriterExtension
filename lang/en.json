@@ -31,5 +31,8 @@
     "error_empty_response": "The OpenAI API returned an empty response. The document has not been modified.",
     "error_token_limit": "The response is empty because the token limit was reached. Increase \"Max tokens\" in Settings and try again.",
     "cancel": "Cancel",
-    "no_language": "Enter the language you want to translate the text into"
+    "no_language": "Enter the language you want to translate the text into",
+    "invalid_model": "Enter the model name",
+    "invalid_max_tokens": "Max tokens must be a whole number greater than 0",
+    "invalid_temperature": "Temperature must be a number between 0 and 2"
 }
