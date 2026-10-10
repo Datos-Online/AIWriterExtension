@@ -4,19 +4,16 @@ import uno
 import json
 import unohelper
 import officehelper # type: ignore
-import urllib.request
-import urllib.error
 import urllib.parse
-import socket
 import platform
 
 # LibreOffice añade pythonpath/ a sys.path al cargar la extensión; al ejecutar
 # este archivo desde un IDE hay que añadirlo a mano.
 try:
-    from aiwriter import models
+    from aiwriter import api
 except ImportError:
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "pythonpath"))
-    from aiwriter import models
+    from aiwriter import api
 
 from com.sun.star.task import XJobExecutor # type: ignore
 from com.sun.star.awt import XActionListener # type: ignore
@@ -30,8 +27,6 @@ try:
 except ImportError:
     HAS_PATH_SUBSTITUTION = False
 
-API_URL = "https://api.openai.com/v1/chat/completions"
-API_TIMEOUT = 90  # Segundos máximos de espera de la respuesta de la API
 SEETINGS_FILE = "aiwriter.json"
 DEFAULT_LANG = "es"
 EXTENSION_NAME = "AIWriterExtension.oxt"
@@ -263,124 +258,25 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
         :param lang: El idioma de destino para la traducción (opcional).
         :return: El texto procesado por la IA, o None si el comando no es válido.
         """
-        prompt_map = {
-            "complete": f"{self.lang['prompt_complete']}: {text}",
-            "summarize": f"{self.lang['prompt_summarize']}: {text}",
-            "improve": f"{self.lang['prompt_improve']}: {text}",
-            "expand": f"{self.lang['prompt_expand']}: {text}",
-            "translate": f"{self.lang['prompt_translate']} {lang}: {text}",
-        }        
-        if command not in prompt_map:
+        user_prompt = api.build_prompt(self.lang, command, text, lang)
+        if user_prompt is None:
             return None
-        
-        openai_api_key = self.get_config("openai_api_key", "")
-        headers = {
-            "Authorization": f"Bearer {openai_api_key}",
-            "Content-Type": "application/json"
-        }
-        
-        model_name = self.get_config("model", "gpt-4o-mini")
-        
-        payload = {
-            "model": model_name,
-            "messages": [
-                {
-                    "role":"assistant", 
-                    "content": [
-                        { 
-                            "type": "text",
-                            "text": f"{self.lang['prompt_assistant']}"
-                        }
-                    ]
-                },{
-                    "role": "user", 
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": prompt_map[command]
-                        }
-                    ]
-                }
-            ],
-            "max_completion_tokens": int(self.get_config("max_tokens", "1000")),
-            "temperature": float(self.get_config("temperature", "0.5"))
-        }
 
-        if not models.supports(model_name, "temperature"):
-            del payload["temperature"]
-        
+        openai_api_key = self.get_config("openai_api_key", "")
+        payload = api.build_payload(
+            self.get_config("model", "gpt-4o-mini"),
+            self.lang['prompt_assistant'],
+            user_prompt,
+            self.get_config("max_tokens", "1000"),
+            self.get_config("temperature", "0.5"),
+        )
+
         try:
-            data = json.dumps(payload).encode("utf-8")  # Convertir payload a JSON y codificarlo
-            req = urllib.request.Request(API_URL, data=data, headers=headers, method="POST")
-            
-            # urlopen lanza HTTPError para cualquier estado distinto de 2xx
-            with urllib.request.urlopen(req, timeout=API_TIMEOUT) as response:
-                response_data = json.loads(response.read().decode("utf-8"))
-            return self.extract_content(response_data)
-        except (socket.timeout, TimeoutError):
-            # socket.timeout no es subclase de TimeoutError en Python < 3.10
-            self.show_dialog(self.lang["error"], self.lang["error_timeout"].format(seconds=API_TIMEOUT))
-        except urllib.error.HTTPError as e:
-            self.show_dialog(self.lang["error"], self.http_error_message(e))
-        except urllib.error.URLError as e:
-            if isinstance(e.reason, (socket.timeout, TimeoutError)):
-                self.show_dialog(self.lang["error"], self.lang["error_timeout"].format(seconds=API_TIMEOUT))
-            else:
-                self.show_dialog(self.lang["error"], f"{self.lang['error_connection']}: {e.reason}")
+            return api.send(payload, openai_api_key)
+        except api.ApiError as e:
+            self.show_dialog(self.lang["error"], e.message(self.lang))
         except Exception as e:
             self.show_dialog(self.lang["error"], str(e))
-
-    def extract_content(self, response_data):
-        """
-        Extrae el texto generado de la respuesta de la API.
-
-        El contenido puede venir nulo o vacío; por ejemplo, en los modelos de
-        razonamiento los tokens internos pueden agotar max_completion_tokens y la
-        respuesta llega vacía con finish_reason "length". En esos casos se avisa
-        al usuario en un diálogo.
-
-        :param response_data: El JSON de respuesta ya decodificado.
-        :return: El texto generado, o None si la respuesta no trae contenido.
-        """
-        try:
-            choice = response_data["choices"][0]
-        except (KeyError, IndexError, TypeError):
-            self.show_dialog(self.lang["error"], self.lang["error_empty_response"])
-            return None
-
-        content = (choice.get("message") or {}).get("content") or ""
-        content = content.strip()
-        if content:
-            return content
-
-        if choice.get("finish_reason") == "length":
-            self.show_dialog(self.lang["error"], self.lang["error_token_limit"])
-        else:
-            self.show_dialog(self.lang["error"], self.lang["error_empty_response"])
-        return None
-
-    def http_error_message(self, error):
-        """
-        Construye un mensaje legible a partir de un error HTTP de la API.
-
-        OpenAI devuelve el detalle en el cuerpo JSON (`error.message`); si el cuerpo
-        no es JSON o no tiene ese campo, se usa el texto recibido tal cual.
-
-        :param error: La excepción urllib.error.HTTPError capturada.
-        :return: El mensaje con el código HTTP y el detalle del servidor.
-        """
-        detail = ""
-        try:
-            body = error.read().decode("utf-8", errors="replace")
-        except Exception:
-            body = ""
-        try:
-            detail = json.loads(body).get("error", {}).get("message", "")
-        except (ValueError, AttributeError):
-            pass
-        if not detail:
-            detail = body.strip() or str(error.reason)
-        return f"{self.lang['error_api']} (HTTP {error.code}): {detail}"
 
     def insert_text(self, doc, new_text, selection, command):
         """
