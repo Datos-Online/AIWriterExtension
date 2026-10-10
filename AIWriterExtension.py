@@ -83,7 +83,6 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
         model = desktop.getCurrentComponent()
         if not hasattr(model, "Text"):
             model = self.desktop.loadComponentFromURL("private:factory/swriter", "_blank", 0, ())
-        selection = model.CurrentController.getSelection()
 
         if command == "hello":
             return
@@ -104,8 +103,7 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
                     self.set_config("temperature", temperature)
                 return
             except Exception as e:
-                text_range = selection.getByIndex(0)
-                text_range.setString(text_range.getString() + ":error: " + str(e))
+                self.show_dialog(self.lang["error"], f"{self.lang['error_message']}: {e}")
         
         elif command == "translate":
             doc = self.get_document()
@@ -135,8 +133,7 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
                             self.insert_text(doc, ai_result, selection, command)
 
             except Exception as e:
-                text_range = selection.getByIndex(0)
-                text_range.setString(text_range.getString() + ":error: " + str(e))
+                self.show_dialog(self.lang["error"], f"{self.lang['error_message']}: {e}")
         
         else:
             doc = self.get_document()
