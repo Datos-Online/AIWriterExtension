@@ -54,6 +54,12 @@ Before using the extension, you need to configure your OpenAI API key and other 
 1.  The user interface may become temporarily unresponsive while waiting for the API response.
 2.  The original text formatting (such as bold, italics, or colors) is not preserved in the generated response, which is inserted as plain text.
 
+## Development
+
+*   **Build the extension:** `./create_extension.sh` on Linux or `create_extension.bat` on Windows. The file is created at `dist/AIWriterExtension.oxt`.
+*   **Structure:** `AIWriterExtension.py` contains the LibreOffice-dependent (UNO) part. The independent logic (API calls, model capabilities and settings) lives in `pythonpath/aiwriter/`.
+*   **Tests:** from the repository root, `python3 -m unittest -v`. LibreOffice is not required.
+
 ## License
 
 This project is licensed under the Apache 2.0 License.

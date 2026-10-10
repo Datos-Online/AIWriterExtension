@@ -58,6 +58,12 @@ Antes de usar la extensión, es necesario configurar tu clave API de OpenAI y ot
 1.  La interfaz de usuario puede dejar de responder temporalmente mientras se espera la respuesta de la API.
 2.  El formato del texto original (como negrita, cursiva o colores) no se conserva en la respuesta generada, que se inserta como texto plano.
 
+## Desarrollo
+
+*   **Crear la extensión:** `./create_extension.sh` en Linux o `create_extension.bat` en Windows. El archivo se genera en `dist/AIWriterExtension.oxt`.
+*   **Estructura:** `AIWriterExtension.py` contiene la parte que depende de LibreOffice (UNO). La lógica independiente (llamada a la API, capacidades de los modelos y configuración) está en `pythonpath/aiwriter/`.
+*   **Pruebas:** desde la raíz del repositorio, `python3 -m unittest -v`. No necesitan LibreOffice.
+
 ## Licencia
 
 Este proyecto está bajo la licencia Apache 2.0.
