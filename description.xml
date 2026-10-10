@@ -4,12 +4,15 @@
     <icon>
       <default xlink:href="ai-writer-icon.png" />
    </icon>
-    <version value="1.0.1"/>
+    <version value="1.0.2"/>
     <dependencies>
         <OpenOffice.org-minimal-version value="4.0"/>
+        <l:LibreOffice-minimal-version value="4.0"/>
     </dependencies>
     <registration>
-        <simple name="com.datosonline.AIWriterExtension"/>
+        <simple-license accept-by="user" >
+            <license-text xlink:href="LICENSE"/>
+        </simple-license>
     </registration>
     <display-name>
         <name lang="es">Extensión IA para LibreOffice Writer</name>
@@ -24,11 +27,12 @@
     <license>
         <name lang="es">Licencia Apache 2.0</name>
         <name lang="en">Apache 2.0 License</name>
-        <file xlink:href="LICENSE" lang="en" />
+        <file xlink:href="LICENSE" />
     </license>
 
     <publisher>
-        <name xlink:href="https://datosonline.com/">Datos Online</name>
+        <name xlink:href="https://datosonline.com/" lang="es">Datos Online</name>
+        <name xlink:href="https://datosonline.com/en" lang="en">Datos Online</name>
     </publisher>
     <update-information>
         <src xlink:href="https://apps.datos.online/aiwriterextension/aiwriterextension.xml" />
