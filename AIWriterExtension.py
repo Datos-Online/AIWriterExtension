@@ -10,6 +10,14 @@ import urllib.parse
 import socket
 import platform
 
+# LibreOffice añade pythonpath/ a sys.path al cargar la extensión; al ejecutar
+# este archivo desde un IDE hay que añadirlo a mano.
+try:
+    from aiwriter import models
+except ImportError:
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "pythonpath"))
+    from aiwriter import models
+
 from com.sun.star.task import XJobExecutor # type: ignore
 from com.sun.star.awt import XActionListener # type: ignore
 from com.sun.star.frame import XDispatchProvider, XDispatch # type: ignore
@@ -298,7 +306,7 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
             "temperature": float(self.get_config("temperature", "0.5"))
         }
 
-        if model_name.lower().startswith("gpt-5"):
+        if not models.supports(model_name, "temperature"):
             del payload["temperature"]
         
         try:
