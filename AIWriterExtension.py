@@ -306,7 +306,7 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
             # urlopen lanza HTTPError para cualquier estado distinto de 2xx
             with urllib.request.urlopen(req, timeout=API_TIMEOUT) as response:
                 response_data = json.loads(response.read().decode("utf-8"))
-                return response_data["choices"][0]["message"]["content"].strip()
+            return self.extract_content(response_data)
         except (socket.timeout, TimeoutError):
             # socket.timeout no es subclase de TimeoutError en Python < 3.10
             self.show_dialog(self.lang["error"], self.lang["error_timeout"].format(seconds=API_TIMEOUT))
@@ -319,6 +319,35 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
                 self.show_dialog(self.lang["error"], f"{self.lang['error_connection']}: {e.reason}")
         except Exception as e:
             self.show_dialog(self.lang["error"], str(e))
+
+    def extract_content(self, response_data):
+        """
+        Extrae el texto generado de la respuesta de la API.
+
+        El contenido puede venir nulo o vacío; por ejemplo, en los modelos de
+        razonamiento los tokens internos pueden agotar max_completion_tokens y la
+        respuesta llega vacía con finish_reason "length". En esos casos se avisa
+        al usuario en un diálogo.
+
+        :param response_data: El JSON de respuesta ya decodificado.
+        :return: El texto generado, o None si la respuesta no trae contenido.
+        """
+        try:
+            choice = response_data["choices"][0]
+        except (KeyError, IndexError, TypeError):
+            self.show_dialog(self.lang["error"], self.lang["error_empty_response"])
+            return None
+
+        content = (choice.get("message") or {}).get("content") or ""
+        content = content.strip()
+        if content:
+            return content
+
+        if choice.get("finish_reason") == "length":
+            self.show_dialog(self.lang["error"], self.lang["error_token_limit"])
+        else:
+            self.show_dialog(self.lang["error"], self.lang["error_empty_response"])
+        return None
 
     def http_error_message(self, error):
         """

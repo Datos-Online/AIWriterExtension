@@ -27,5 +27,7 @@
     "lo_path_error": "Error finding LibreOffice installation directory",
     "error_timeout": "The OpenAI API did not respond within {seconds} seconds. Check your connection and try again.",
     "error_connection": "Could not connect to the OpenAI API",
-    "error_api": "The OpenAI API returned an error"
+    "error_api": "The OpenAI API returned an error",
+    "error_empty_response": "The OpenAI API returned an empty response. The document has not been modified.",
+    "error_token_limit": "The response is empty because the token limit was reached. Increase \"Max tokens\" in Settings and try again."
 }
