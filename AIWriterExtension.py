@@ -10,10 +10,10 @@ import platform
 # LibreOffice añade pythonpath/ a sys.path al cargar la extensión; al ejecutar
 # este archivo desde un IDE hay que añadirlo a mano.
 try:
-    from aiwriter import api
+    from aiwriter import api, config
 except ImportError:
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "pythonpath"))
-    from aiwriter import api
+    from aiwriter import api, config
 
 from com.sun.star.task import XJobExecutor # type: ignore
 from com.sun.star.awt import XActionListener # type: ignore
@@ -27,7 +27,6 @@ try:
 except ImportError:
     HAS_PATH_SUBSTITUTION = False
 
-SEETINGS_FILE = "aiwriter.json"
 DEFAULT_LANG = "es"
 EXTENSION_NAME = "AIWriterExtension.oxt"
 
@@ -98,11 +97,11 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
                     if not values:
                         # Cancelar no modifica la configuración guardada
                         return
-                    settings, error = self.validate_settings(values)
+                    settings, error = config.validate_settings(values)
                     if not error:
                         break
                     # Se vuelve a abrir el diálogo con lo escrito para poder corregirlo
-                    self.show_dialog(self.lang["error"], error)
+                    self.show_dialog(self.lang["error"], self.lang[error])
 
                 for key, value in settings.items():
                     self.set_config(key, value)
@@ -163,78 +162,38 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
                 self.insert_text(doc, ai_result, selection, command)
         
 
+    def config_file_path(self):
+        """
+        Devuelve la ruta de aiwriter.json en el directorio UserConfig de LibreOffice.
+        """
+        path_settings = self.sm.createInstanceWithContext('com.sun.star.util.PathSettings', self.ctx)
+        user_config_path = getattr(path_settings, "UserConfig")
+        if user_config_path.startswith('file://'):
+            user_config_path = str(uno.fileUrlToSystemPath(user_config_path))
+        return config.config_path(user_config_path)
+
     def get_config(self,key,default):
         """
         Obtiene un valor de configuración del archivo de ajustes.
 
-        Lee el archivo JSON de configuración y devuelve el valor asociado a una clave.
         Si el archivo o la clave no existen, devuelve un valor por defecto.
 
         :param key: La clave de configuración a buscar.
         :param default: El valor a devolver si la clave no se encuentra.
         :return: El valor de la configuración o el valor por defecto.
         """
-        path_settings = self.sm.createInstanceWithContext('com.sun.star.util.PathSettings', self.ctx)
-        user_config_path = getattr(path_settings, "UserConfig")
-        if user_config_path.startswith('file://'):
-            user_config_path = str(uno.fileUrlToSystemPath(user_config_path))
-
-        # Asegurar que la ruta termine con el nombre del archivo
-        config_file_path = os.path.join(user_config_path, SEETINGS_FILE)
-
-        # Comprobar si el archivo existe
-        if not os.path.exists(config_file_path):
-            return default
-
-        # Intentar cargar el contenido JSON del archivo
-        try:
-            with open(config_file_path, 'r') as file:
-                config_data = json.load(file)
-        except (IOError, json.JSONDecodeError):
-            return default
-
-        # Devolver el valor correspondiente a la clave, o el valor por defecto si la clave no se encuentra
-        return config_data.get(key, default)
+        return config.get_value(self.config_file_path(), key, default)
 
     def set_config(self, key, value):
         """
         Establece un valor de configuración en el archivo de ajustes.
 
-        Escribe un par clave-valor en el archivo de configuración JSON.
         Si el archivo no existe, lo crea.
 
         :param key: La clave de configuración a establecer.
         :param value: El valor a guardar.
         """
-        path_settings = self.sm.createInstanceWithContext('com.sun.star.util.PathSettings', self.ctx)
-        user_config_path = getattr(path_settings, "UserConfig")
-
-        if user_config_path.startswith('file://'):
-            user_config_path = str(uno.fileUrlToSystemPath(user_config_path))
-
-        # Asegurar que la ruta termine con el nombre del archivo
-        config_file_path = os.path.join(user_config_path, SEETINGS_FILE)
-
-        # Cargar la configuración existente si el archivo existe
-        if os.path.exists(config_file_path):
-            try:
-                with open(config_file_path, 'r') as file:
-                    config_data = json.load(file)
-            except (IOError, json.JSONDecodeError):
-                config_data = {}
-        else:
-            config_data = {}
-
-        # Actualizar la configuración con el nuevo par clave-valor
-        config_data[key] = value
-
-        # Escribir la configuración actualizada de nuevo en el archivo
-        try:
-            with open(config_file_path, 'w') as file:
-                json.dump(config_data, file, indent=4)
-        except IOError as e:
-            # Manejar posibles errores de E/S (opcional)
-            print(f"Error writing to {config_file_path}: {e}")
+        config.set_value(self.config_file_path(), key, value)
 
     def get_document(self):
         """
@@ -331,46 +290,6 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
         if result == MSG_RESULTS.OK:
             print("El usuario hizo clic en OK")
         """
-
-    def validate_settings(self, values):
-        """
-        Valida y convierte los valores introducidos en el diálogo de configuración.
-
-        :param values: Diccionario con los textos de los campos del diálogo.
-        :return: Una tupla (ajustes, error). Si todo es válido, ajustes contiene los
-                 valores convertidos y error es None; si no, ajustes es None y error
-                 es el mensaje a mostrar.
-        """
-        openai_api_key = values["openai_api_key"].strip()
-        if not openai_api_key:
-            return None, self.lang["no_api_key"]
-
-        model = values["model"].strip()
-        if not model:
-            return None, self.lang["invalid_model"]
-
-        try:
-            max_tokens = int(values["max_tokens"].strip())
-        except ValueError:
-            max_tokens = 0
-        if max_tokens <= 0:
-            return None, self.lang["invalid_max_tokens"]
-
-        try:
-            # Se acepta la coma como separador decimal
-            temperature = float(values["temperature"].strip().replace(",", "."))
-        except ValueError:
-            temperature = None
-        # La comparación también descarta nan e inf
-        if temperature is None or not 0 <= temperature <= 2:
-            return None, self.lang["invalid_temperature"]
-
-        return {
-            "openai_api_key": openai_api_key,
-            "model": model,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-        }, None
 
     def settings_box(self,title="", x=None, y=None, values=None):
         """
