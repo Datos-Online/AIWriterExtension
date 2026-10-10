@@ -518,7 +518,7 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
         label_width = 120
         control_width = 450
         add("label_openai_api_key", "FixedText", HORI_MARGIN, VERT_MARGIN+4, label_width, LABEL_HEIGHT, {"Label": f"{self.lang['openai_api_key']}:", "NoLabel": True})
-        add("edit_openai_api_key", "Edit", HORI_MARGIN + label_width, VERT_MARGIN, control_width, EDIT_HEIGHT, {"Text": values["openai_api_key"], "MultiLine":False})
+        add("edit_openai_api_key", "Edit", HORI_MARGIN + label_width, VERT_MARGIN, control_width, EDIT_HEIGHT, {"Text": values["openai_api_key"], "MultiLine":False, "EchoChar": ord("*")})
         
         add("label_model", "FixedText", HORI_MARGIN, 62, label_width, LABEL_HEIGHT, {"Label": f"{self.lang['openai_model']}:", "NoLabel": True})
         add("edit_model", "Edit", HORI_MARGIN + label_width, 58, control_width, EDIT_HEIGHT, {"Text": values["model"]})
