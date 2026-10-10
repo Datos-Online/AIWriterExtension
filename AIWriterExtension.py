@@ -124,13 +124,16 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
                 result = self.translation_box(self.lang['translate'])
                 if not result:
                     return
-                else:
-                    language = result['language']
-                    self.set_config("language", language)
-                    if language != "":                        
-                        ai_result = self.process_text(selection, command, language)
-                        if ai_result:
-                            self.insert_text(doc, ai_result, selection, command)
+
+                language = result['language'].strip()
+                if not language:
+                    self.show_dialog(self.lang["error"], self.lang["no_language"])
+                    return
+
+                self.set_config("language", language)
+                ai_result = self.process_text(selection, command, language)
+                if ai_result:
+                    self.insert_text(doc, ai_result, selection, command)
 
             except Exception as e:
                 self.show_dialog(self.lang["error"], f"{self.lang['error_message']}: {e}")
@@ -534,7 +537,7 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
         :param title: El título para el cuadro de diálogo.
         :param x: Coordenada X opcional para la posición del diálogo.
         :param y: Coordenada Y opcional para la posición del diálogo.
-        :return: Un diccionario con el idioma de destino.
+        :return: Un diccionario con el idioma de destino, o None si se cancela.
         """
         WIDTH = 600
         HORI_MARGIN = VERT_MARGIN = 8
@@ -571,6 +574,7 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
         add("edit_language", "Edit", HORI_MARGIN + label_width, VERT_MARGIN, control_width, EDIT_HEIGHT, {"Text": str(self.get_config("language",""))})
         
         add("btn_ok", "Button", WIDTH - 120, HEIGHT - 50, BUTTON_WIDTH, BUTTON_HEIGHT, {"PushButtonType": OK, "DefaultButton": True})
+        add("btn_cancel", "Button", WIDTH - 230, HEIGHT - 50, BUTTON_WIDTH, BUTTON_HEIGHT, {"PushButtonType": CANCEL, "Label": self.lang["cancel"]})
 
         frame = create("com.sun.star.frame.Desktop").getCurrentFrame()
         window = frame.getContainerWindow() if frame else None
@@ -594,9 +598,8 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
                 "language":edit_language.getModel().Text
             }
         else:
-            result = {
-                "language": str(self.get_config("language",""))
-            }
+            # Cancelar o cerrar el diálogo no debe lanzar la traducción
+            result = None
 
         dialog.dispose()
         return result

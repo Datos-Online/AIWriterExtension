@@ -29,5 +29,7 @@
     "error_connection": "No se pudo conectar con la API de OpenAI",
     "error_api": "La API de OpenAI devolvió un error",
     "error_empty_response": "La API de OpenAI devolvió una respuesta vacía. No se ha modificado el documento.",
-    "error_token_limit": "La respuesta está vacía porque se alcanzó el límite de tokens. Aumenta \"Máx. tokens\" en Ajustes e inténtalo de nuevo."
+    "error_token_limit": "La respuesta está vacía porque se alcanzó el límite de tokens. Aumenta \"Máx. tokens\" en Ajustes e inténtalo de nuevo.",
+    "cancel": "Cancelar",
+    "no_language": "Indica el idioma al que quieres traducir el texto"
 }
