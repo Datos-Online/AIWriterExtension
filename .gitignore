@@ -169,3 +169,6 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Plan de trabajo local de la rama V2
+docs/plan-V2.md
