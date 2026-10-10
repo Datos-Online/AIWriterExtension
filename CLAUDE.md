@@ -76,12 +76,28 @@ Cubren `pythonpath/aiwriter/` (payload, tabla de capacidades, respuestas y error
 
 ## Deuda técnica conocida (candidatos a mejora)
 
-- El prompt de instrucciones se envía con rol `assistant`; evaluar usar `system` o `user`.
-- Llamada síncrona a OpenAI que bloquea la interfaz.
-- Clave API guardada en JSON de texto plano.
-- Lista de archivos del build duplicada en dos scripts.
-- La clase UNO sigue concentrando la interfaz (diálogos duplicados en `settings_box` y `translation_box`, validaciones repetidas en `trigger`).
-- Falta soporte para macOS en `find_extension_path`.
+Los números entre corchetes son los puntos de la auditoría en `docs/plan-V2.md`. Ese archivo es local, está en `.gitignore` y puede no existir en otra copia del repositorio.
+
+**Robustez y API**
+- [1.7] Si `find_extension_path` no encuentra la extensión, `__init__` falla sin mostrar ningún mensaje útil: `show_dialog` usa `self.lang` antes de que exista, y `os.path.join(None, …)` lanza un error. Además, `PathSubstitution` nunca se importa, así que solo se prueban rutas fijas. Sustituirlo por `PackageInformationProvider.getPackageLocation("com.datosonline.AIWriterExtension")`, que funciona en todos los sistemas, incluido macOS.
+- [1.8] El prompt de instrucciones se envía con rol `assistant`; evaluar `system` o `developer` (en `api.build_payload` y su prueba).
+- [1.9] Faltan los modelos `o1`/`o3`/`o4-mini` en `MODEL_CAPABILITIES`; rechazan `temperature`.
+- [1.10] La llamada a OpenAI es síncrona y bloquea la interfaz. Si se hace en un hilo, el resultado debe insertarse en el hilo principal (por ejemplo, con `com.sun.star.awt.AsyncCallback`).
+- [1.11] `_x/_y` quedan sin definir en `settings_box`/`translation_box` si no hay ventana. Si no hay un documento Writer activo, `trigger` crea uno nuevo.
+
+**Seguridad y configuración**
+- [2.2] La clave API se guarda en JSON de texto plano con los permisos del `umask`. Mejora rápida: `chmod 600` y la variable de entorno `OPENAI_API_KEY` como respaldo. Mejora completa: `com.sun.star.task.PasswordContainer`.
+- [2.3] `config.set_value` no escribe de forma atómica; usar un archivo temporal y `os.replace`.
+- [2.4] `API_URL` está fija en el código; falta una "URL base" configurable (Azure, Ollama).
+- [2.5] `Accelerators.xcu` usa `oor:op="replace"` y puede pisar atajos nativos de Writer (Ctrl+Shift+C es "Registrar cambios").
+- [2.6] `description.xml` declara la versión mínima 4.0 de LibreOffice, pero se soporta 24.2 o superior.
+- [2.7] Falta un aviso de privacidad: el texto seleccionado se envía a OpenAI.
+
+**Calidad del código**
+- [3.2] La clase UNO sigue concentrando la interfaz: diálogos duplicados en `settings_box` y `translation_box`, validaciones repetidas en `trigger`, y la configuración se relee del disco en cada `get_config`.
+- [3.3] Código muerto: el comando `"hello"`, imports sin uso (`XActionListener`, `XDispatchProvider`, `XDispatch`, `PropertyValue`, `MSG_RESULTS`, `urllib.parse`), `HORI_SEP`/`VERT_SEP`, `import uno` repetido y la rama `HAS_PATH_SUBSTITUTION`.
+- [3.5] Hay textos sin localizar: el error de `find_extension_path` está en inglés fijo. La clave `unsuported_os` tiene una errata; si se renombra, hay que hacerlo en los dos archivos de idioma a la vez.
+- [3.6] La lista de archivos del build está duplicada en `.sh` y `.bat`; un único `build.py` con `zipfile` serviría para los dos sistemas.
 
 ## Convenciones
 
