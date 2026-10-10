@@ -5,7 +5,7 @@ EXTENSION_NAME="AIWriterExtension.oxt"
 OUTPUT_DIR="dist"
 
 # --- Archivos y carpetas a incluir en la extensión ---
-FILES_TO_INCLUDE="AIWriterExtension.py description.xml Accelerators.xcu Addons.xcu LICENSE README.md ai-writer-icon.png lang META-INF"
+FILES_TO_INCLUDE="AIWriterExtension.py pythonpath description.xml Accelerators.xcu Addons.xcu LICENSE README.md ai-writer-icon.png lang META-INF"
 
 # Verificar si zip está instalado
 if ! command -v zip &> /dev/null

@@ -6,7 +6,7 @@ SET "EXTENSION_NAME=AIWriterExtension"
 SET "OUTPUT_DIR=dist"
 
 REM --- Archivos y carpetas a incluir en la extensión ---
-SET FILES_TO_INCLUDE=AIWriterExtension.py description.xml Addons.xcu Accelerators.xcu LICENSE README.md ai-writer-icon.png lang META-INF
+SET FILES_TO_INCLUDE=AIWriterExtension.py pythonpath description.xml Addons.xcu Accelerators.xcu LICENSE README.md ai-writer-icon.png lang META-INF
 
 echo Creando el directorio de salida...
 if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
@@ -17,7 +17,7 @@ if exist "%OUTPUT_DIR%\%EXTENSION_NAME%.oxt" del "%OUTPUT_DIR%\%EXTENSION_NAME%.
 
 echo Creando el archivo de la extension: %EXTENSION_NAME%
 
-tar -a -c -f "%OUTPUT_DIR%\%EXTENSION_NAME%.zip" %FILES_TO_INCLUDE%
+tar -a -c --exclude=__pycache__ --exclude=*.pyc -f "%OUTPUT_DIR%\%EXTENSION_NAME%.zip" %FILES_TO_INCLUDE%
 move "%OUTPUT_DIR%\%EXTENSION_NAME%.zip" "%OUTPUT_DIR%\%EXTENSION_NAME%.oxt"
 
 echo.
