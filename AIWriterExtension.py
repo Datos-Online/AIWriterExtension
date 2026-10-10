@@ -5,7 +5,9 @@ import json
 import unohelper
 import officehelper # type: ignore
 import urllib.request
+import urllib.error
 import urllib.parse
+import socket
 import platform
 
 from com.sun.star.task import XJobExecutor # type: ignore
@@ -21,6 +23,7 @@ except ImportError:
     HAS_PATH_SUBSTITUTION = False
 
 API_URL = "https://api.openai.com/v1/chat/completions"
+API_TIMEOUT = 90  # Segundos máximos de espera de la respuesta de la API
 SEETINGS_FILE = "aiwriter.json"
 DEFAULT_LANG = "es"
 EXTENSION_NAME = "AIWriterExtension.oxt"
@@ -300,12 +303,22 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
             data = json.dumps(payload).encode("utf-8")  # Convertir payload a JSON y codificarlo
             req = urllib.request.Request(API_URL, data=data, headers=headers, method="POST")
             
-            with urllib.request.urlopen(req) as response:
+            with urllib.request.urlopen(req, timeout=API_TIMEOUT) as response:
                 if response.status == 200:
                     response_data = json.loads(response.read().decode("utf-8"))
                     return response_data["choices"][0]["message"]["content"].strip()
                 else:
                     self.show_dialog(self.lang["error"], f"{response.read().decode('utf-8')}")
+        except (socket.timeout, TimeoutError):
+            # socket.timeout no es subclase de TimeoutError en Python < 3.10
+            self.show_dialog(self.lang["error"], self.lang["error_timeout"].format(seconds=API_TIMEOUT))
+        except urllib.error.HTTPError as e:
+            self.show_dialog(self.lang["error"], str(e))
+        except urllib.error.URLError as e:
+            if isinstance(e.reason, (socket.timeout, TimeoutError)):
+                self.show_dialog(self.lang["error"], self.lang["error_timeout"].format(seconds=API_TIMEOUT))
+            else:
+                self.show_dialog(self.lang["error"], f"{self.lang['error_connection']}: {e.reason}")
         except Exception as e:
             self.show_dialog(self.lang["error"], str(e))
 

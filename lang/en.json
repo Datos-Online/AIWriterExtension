@@ -24,5 +24,7 @@
     "max_tokens": "Max tokens",
     "translate_to": "Translate to",
     "unsuported_os": "Unsupported operating system",
-    "lo_path_error": "Error finding LibreOffice installation directory"
+    "lo_path_error": "Error finding LibreOffice installation directory",
+    "error_timeout": "The OpenAI API did not respond within {seconds} seconds. Check your connection and try again.",
+    "error_connection": "Could not connect to the OpenAI API"
 }
