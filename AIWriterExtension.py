@@ -303,17 +303,15 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
             data = json.dumps(payload).encode("utf-8")  # Convertir payload a JSON y codificarlo
             req = urllib.request.Request(API_URL, data=data, headers=headers, method="POST")
             
+            # urlopen lanza HTTPError para cualquier estado distinto de 2xx
             with urllib.request.urlopen(req, timeout=API_TIMEOUT) as response:
-                if response.status == 200:
-                    response_data = json.loads(response.read().decode("utf-8"))
-                    return response_data["choices"][0]["message"]["content"].strip()
-                else:
-                    self.show_dialog(self.lang["error"], f"{response.read().decode('utf-8')}")
+                response_data = json.loads(response.read().decode("utf-8"))
+                return response_data["choices"][0]["message"]["content"].strip()
         except (socket.timeout, TimeoutError):
             # socket.timeout no es subclase de TimeoutError en Python < 3.10
             self.show_dialog(self.lang["error"], self.lang["error_timeout"].format(seconds=API_TIMEOUT))
         except urllib.error.HTTPError as e:
-            self.show_dialog(self.lang["error"], str(e))
+            self.show_dialog(self.lang["error"], self.http_error_message(e))
         except urllib.error.URLError as e:
             if isinstance(e.reason, (socket.timeout, TimeoutError)):
                 self.show_dialog(self.lang["error"], self.lang["error_timeout"].format(seconds=API_TIMEOUT))
@@ -321,6 +319,29 @@ class AIWriterExtension(unohelper.Base, XJobExecutor):
                 self.show_dialog(self.lang["error"], f"{self.lang['error_connection']}: {e.reason}")
         except Exception as e:
             self.show_dialog(self.lang["error"], str(e))
+
+    def http_error_message(self, error):
+        """
+        Construye un mensaje legible a partir de un error HTTP de la API.
+
+        OpenAI devuelve el detalle en el cuerpo JSON (`error.message`); si el cuerpo
+        no es JSON o no tiene ese campo, se usa el texto recibido tal cual.
+
+        :param error: La excepción urllib.error.HTTPError capturada.
+        :return: El mensaje con el código HTTP y el detalle del servidor.
+        """
+        detail = ""
+        try:
+            body = error.read().decode("utf-8", errors="replace")
+        except Exception:
+            body = ""
+        try:
+            detail = json.loads(body).get("error", {}).get("message", "")
+        except (ValueError, AttributeError):
+            pass
+        if not detail:
+            detail = body.strip() or str(error.reason)
+        return f"{self.lang['error_api']} (HTTP {error.code}): {detail}"
 
     def insert_text(self, doc, new_text, selection, command):
         """

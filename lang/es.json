@@ -26,5 +26,6 @@
     "unsuported_os": "Sistema operativo no soportado",
     "lo_path_error": "Error al encontrar el directorio de instalación de LibreOffice",
     "error_timeout": "La API de OpenAI no respondió en {seconds} segundos. Revisa tu conexión e inténtalo de nuevo.",
-    "error_connection": "No se pudo conectar con la API de OpenAI"
+    "error_connection": "No se pudo conectar con la API de OpenAI",
+    "error_api": "La API de OpenAI devolvió un error"
 }
